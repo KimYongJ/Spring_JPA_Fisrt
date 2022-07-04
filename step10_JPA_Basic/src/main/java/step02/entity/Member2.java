@@ -18,6 +18,7 @@ import lombok.Data;
 public class Member2 {
 	@Id//프라이머리키로 지정
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // db에서 알아서 값을 생성해주라는 뜻이 담겨 있음. IDENTITY 는 autoIncreament라 생각하면됨 MySQL 에서 많이 씀
+	// 기본 키 생성을 데이터베이스에 위임	즉, id 값을 null로 하면 DB가 알아서 AUTO_INCREMENT 해준다
 	private Long id;
 	@Column(columnDefinition = "varchar(100) default 'AAA", nullable = false)
 	private String name;
