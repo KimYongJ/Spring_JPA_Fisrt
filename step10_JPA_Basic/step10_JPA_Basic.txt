@@ -1,0 +1,115 @@
+step10_JPA_Basic
+
+[  학 습    ]
+1. Persistence (영속성)
+	- 프로그램이 종료가 되더라도 사라지지 않는 데이터의 특성 
+	- JDBC를 통한 개발 
+	- JPA 그림 https://sites.google.com/site/telosystutorial/springmvc-jpa-springdatajpa/presentation/architecture
+	- Repository가 Persistence layer(영속성)에 속한다.
+	
+	도구 
+	- Persistence Framework
+		- JDBC 프로그래밍의 복잡함, 번거로움 없이 간단한 작업만으로 DB와 연동되는 시스템
+		- 종류 : SQL Mapper , ORM
+			-SQL Mapper : SQL쿼리에 대한 부분과 자바프로그램의 오브젝트 필드를 연동함 , SQL 문장으로 DB를 다루는 것(MyBatis , JDBCTemplate , etc..) 
+			-ORM : Object-Relational Mapping의 줄임말로 DB자체를 객체와 맵핑하여 다룬다.
+				- 객체를 통한 DB 다루기
+				- 객체와 RDBMS 데이터를 자동으로 매핑해주는 기능이 있다. 기능 이름이 Persistence API라 한다.
+					- ex) Persistence API = JPA, ETC.. 
+					- 설명 주소 : https://www.oracle.com/webfolder/technetwork/jsc/xml/ns/persistence/index.html#2.2
+							   https://hibernate.org/orm/documentation/5.4/
+					- JPA 설명 ( Java Persistence API )
+						- 자바 ORM 기술에 대한 API 표준 명세이다.
+						- 구성요소 3가지
+							- javax.persistence API
+							- JPQL Java Persistence Query Language : 규칙이있다. query문의 테이블 첫번째 글자는 무조건 대문자여야 된다. 
+							- 객체와 DB사이 관계가 정의된 메타데이터가 있다.
+						- 구성요소를 갖고 구현한 구현체들 : Hibernate , OpenJPA , etc . .
+					
+					- Hibernate 설명
+						- JPA 구현체 중 하나
+						- SQL을 직접 사용하지 않음( 개발자의 입장에서 쓰지 않는다는 뜻이다. )
+						- 내부적으로 JDBC API에 대한 부분은 동작하고 있다.
+						- Java Class , Property 명 제외하고 작명시 대소문자를 구분한다.
+						- 장점
+							- 객체 지향적인 코드를 작성하고 집중하여 개발할 수 있도록 도움
+							- 재사용 및 유지보수에 편리성이 증가함
+							- DBMS 종속성이 줄어듬
+						- 단점 
+							- 생각지 못한 Query가 실행될 수 있음(원하지 않는 결과 혹은 성능이 나타날 수 있으므로 성능 저하 발생 가능)
+							- 성능 향상을 위한 쿼리 튜닝이 필요할 경우가 있음(프로젝트의 복잡성이 증가하게 되면 난이도 상승)
+					- 영속성 컨텍스트 Persistence Context
+						- Entity를 영구 저장하고 관리하는 고유한 환경을 Context라 한다.
+						- persist()는 데이터 저장시 사용
+						- Entity의 상태에 따라 영속성 컨텍스트 포함 여부가 결정( entity생명주기 : https://dev-mind.fr/img/training/spring-intro/lifecycle-e9f1372424.png )
+							- 비영속상태(new/transient) : 영속성 컨텍스트와 관계가 없는 상태
+							- 영속상태(managed) : 영속성 컨텍스트에 저장된 상태
+								- 영속성 context의 장점 : 1차 캐시라는 특징(트랜잭션을 지원하는 쓰기 지연), 동일성 보장이라는 특징, 변경 감지
+							- 준영속상태(detached) : 영속성 컨텍스트에서 저장되었다가 분리된 상태
+							- 삭제상태(removed) : 삭제가 된 상태 
+
+[ 실 습  ]
+- db생성
+	- 테이블을 완전히 신규로 생성할 때는 persistence.xml에서 <property name="hibernate.hbm2ddl.auto" value="create"/> 여기서 value를 create로 해야한다. 
+	- tx.begin(); 으로 트랜젝션을 시작하며 마지막에 commit을 해준다. 
+	- Member 객체를 생성한 후 em.persist(member1); 함수를 통해 db에 저장해주고 tx.commit(); 커밋을 한다.
+- db조회
+	- 조회한 데이터를 담을 Member객체를 생성하고  em.find(Member.class, "id1"); 함수를 통해 데이터를 바로 담아준다.
+	- 전부 조회하기 위해서는 List<Member> allMembers = em.createQuery("select m from Member m", Member.class).getResultList();
+	- 이러한 형식으로 sql쿼리문과 비슷한 쿼리를 써준다. 이 때 from뒤에오는 테이블이름의 첫글자는 반드시 대문자로 해야한다. 또 별칭을 따로 지정해서 불러와야 한다. 
+- db수정
+	- tx.begin();과 tx.commit(); 를 해주어야 db에 적용이 된다. id값(프라이머리키)으로 해당 값을 찾고, set함수를 통해 데이터를 수정만하면 자동으로 db에 적용된다.
+	- 동작 원리
+		1) flush()[내부 쿼리 저장소에있는 SQL이 DB에 동기화되는 함수]호출(tx.commit() 실행시 자동호출되는것)
+		2) 엔티티 스냅샷과 변경된 엔티티를 비교함
+		3) 변경된 엔티티가 존재하면 update 쿼리를 생성을 해줌
+		4) 쓰기지연 SQL 저장소에 보관 
+		5) DB에 전송 후 DB트렌젝션이 commit된다.
+- db삭제
+	- 흐름 : id값(프라이머리키)으로 해당 값을 찾고  EntityManager 객체를 통해 삭제한다.
+
+	
+	
+	
+	=======================================프로그래밍 전 셋팅사항============================================
+	프로젝 생성 : new -> Maven Project -> Create a simple Project 체크하고 다음 -> group id , artif? id 등 입력후 낵스트
+	pom.xml을 수정해야됨 / javax persistenct api2.2 메이븐사이트에서 찾아서 insert해줌 그외 몇가지 더있음 이하 그 내용 
+	 	<!-- https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api -->
+	<dependency>
+	    <groupId>javax.persistence</groupId>
+	    <artifactId>javax.persistence-api</artifactId>
+	    <version>2.2</version>
+	</dependency>
+  <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-entitymanager -->
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-entitymanager</artifactId>
+    <version>5.4.33.Final</version>
+</dependency>
+    <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+  <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.24</version>
+      <scope>provided</scope>
+  </dependency>
+	  <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+  <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.28</version>
+  </dependency>
+	
+	
+	- db와 연동할 수 있는 설정파일 ( persistence.xml ) 셋팅 
+		src/main/resources파일안에 META-INF폴더를 만들고 persistence.xml을 생성한다. 파일안의 내용 확인하기
+		
+
+		
+	
+	
+	
+	
+	
+	
+	
