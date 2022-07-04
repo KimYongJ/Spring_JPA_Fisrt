@@ -49,6 +49,10 @@ public class Step01Test {
 //		// select all 하는 코드 JPQL 예시 : Entity 객체를 대상으로 검색하는 객체지향적 쿼리 
 //		List<Member> allMembers = em.createQuery("select m from Member m", Member.class).getResultList();
 //		System.out.println(allMembers);
+		// Member 클래스 안의 String id 값만 가져오는 방법 이다. ( 이하코드 )
+		List<String> allMembers = em.createQuery("select m.id from Member m", String.class).getResultList();
+		System.out.println(allMembers);
+		
 //		
 //		// 반환타입이 명확할 경우 TypeQuery사용, 불명확할 경우 Query 사용
 //		
@@ -58,10 +62,10 @@ public class Step01Test {
 		///////////////////////// DB 수정 ////////////////////////////////////
 		// 흐름 : id값(프라이머리키)으로 해당 값을 찾고 수정한다. 객체 자체를 set을 통해 값을 변경만하면 자동 적용됨 , 
 		// 업데이트 대상에서 지정되지 않은 멤버변수 데이터는 기존대로 유지함.
-		tx.begin(); 
-		Member member1 =  em.find(Member.class, "id1");
-		member1.setAge(47);
-		tx.commit();
+//		tx.begin(); 
+//		Member member1 =  em.find(Member.class, "id1");
+//		member1.setAge(47);
+//		tx.commit();
 		///////////////////// DB 수정 관련 실험, em.clear를 하면 em.find로 찾은 객체가 사라지므로 setAge가 안된다. /////////////////////////////////
 //		tx.begin();
 //		Member member1 =  em.find(Member.class, "id1");
